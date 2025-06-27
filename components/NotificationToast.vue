@@ -4,19 +4,23 @@
       <Transition name="notifications-container">
         <div 
           v-if="notifications.length > 0"
-          class="fixed inset-x-0 top-18 z-[60] pointer-events-none lg:top-20"
+          class="fixed inset-x-0 z-[9999] pointer-events-none notification-wrapper"
+          :class="isMobile ? 'top-[4rem] pt-4' : 'top-20 pt-2'"
         >
-          <div class="flex flex-col items-center space-y-2 p-4 lg:items-end lg:pr-6">
-            <TransitionGroup name="notification" tag="div" class="flex flex-col space-y-2">
+          <div class="flex flex-col space-y-2 px-4 lg:pr-6" :class="isMobile ? 'items-center' : 'items-center lg:items-end'">
+            <TransitionGroup name="notification" tag="div" class="flex flex-col space-y-2 w-full max-w-sm lg:max-w-md">
               <div
                 v-for="notification in visibleNotifications"
                 :key="notification.id"
-                class="notification-item pointer-events-auto w-full max-w-sm lg:w-96"
+                class="notification-item pointer-events-auto w-full"
               >
                 <!-- Unified Layout for both mobile and desktop -->
                 <div 
-                  class="flex items-start gap-3 p-3 lg:p-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg border-l-4"
-                  :class="getBorderColorClass(notification.type)"
+                  class="flex items-start gap-3 p-3 lg:p-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg border-l-4 mx-auto lg:mx-0"
+                  :class="[
+                    getBorderColorClass(notification.type),
+                    isMobile ? 'max-w-[calc(100vw-2rem)]' : 'lg:w-96'
+                  ]"
                 >
                   <div class="flex-shrink-0 mt-0.5">
                     <UIcon 
@@ -31,12 +35,12 @@
                     </h4>
                     <p 
                       v-if="notification.message" 
-                      class="text-xs lg:text-sm text-gray-600 dark:text-gray-400 mt-1"
+                      class="text-xs lg:text-sm text-gray-600 dark:text-gray-400 mt-1 break-words"
                     >
                       {{ notification.message }}
                     </p>
                     <!-- Actions -->
-                    <div v-if="notification.actions && notification.actions.length > 0" class="flex gap-2 mt-2 lg:mt-3">
+                    <div v-if="notification.actions && notification.actions.length > 0" class="flex gap-2 mt-2 lg:mt-3 flex-wrap">
                       <UButton
                         v-for="(action, index) in notification.actions.slice(0, isMobile ? 2 : notification.actions.length)"
                         :key="action.label"
@@ -44,7 +48,7 @@
                         :variant="action.style === 'primary' ? 'solid' : 'outline'"
                         :color="action.style === 'danger' ? 'red' : 'primary'"
                         size="2xs"
-                        class="text-xs lg:text-sm"
+                        class="text-xs lg:text-sm flex-shrink-0"
                       >
                         {{ action.label }}
                       </UButton>
@@ -55,14 +59,15 @@
                     variant="ghost"
                     size="2xs"
                     icon="i-heroicons-x-mark"
-                    class="flex-shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 lg:size-xs"
+                    class="flex-shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 lg:size-xs touch-target"
                   />
                 </div>
 
                 <!-- Progress Bar (if enabled) -->
                 <div 
                   v-if="notification.progress && notification.timeout"
-                  class="h-1 bg-gray-200 dark:bg-gray-700 rounded-b-lg overflow-hidden"
+                  class="h-1 bg-gray-200 dark:bg-gray-700 rounded-b-lg overflow-hidden mx-auto lg:mx-0"
+                  :class="isMobile ? 'max-w-[calc(100vw-2rem)]' : 'lg:w-96'"
                 >
                   <div 
                     class="h-full bg-current transition-all duration-100 ease-linear"
@@ -186,6 +191,18 @@ onUnmounted(() => {
   z-index: 9999;
 }
 
+.notification-wrapper {
+  /* Better mobile positioning with safe area support */
+  padding-left: max(env(safe-area-inset-left), 0);
+  padding-right: max(env(safe-area-inset-right), 0);
+}
+
+/* Touch-friendly close button */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
 /* Notification animations */
 .notification-enter-active {
   transition: all 0.3s ease-out;
@@ -220,18 +237,58 @@ onUnmounted(() => {
   transform: translateY(-10px);
 }
 
-/* Safe area handling for mobile */
-@supports (top: env(safe-area-inset-top)) {
-  .notification-container .fixed.top-0 {
-    top: env(safe-area-inset-top);
+/* Enhanced mobile support */
+@media (max-width: 640px) {
+  .notification-wrapper {
+    /* Ensure notifications are visible on mobile */
+    top: 4rem !important;
+    padding-top: 1rem;
+  }
+  
+  .notification-item {
+    /* Mobile-specific adjustments */
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+  }
+  
+  /* Handle notches and safe areas on mobile */
+  @supports (top: env(safe-area-inset-top)) {
+    .notification-wrapper {
+      top: calc(4rem + env(safe-area-inset-top)) !important;
+    }
   }
 }
 
-/* Responsive adjustments */
+/* Better mobile layout for landscape */
+@media (max-width: 920px) and (orientation: landscape) {
+  .notification-wrapper {
+    top: 3rem !important;
+    padding-top: 0.5rem;
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 641px) and (max-width: 1023px) {
+  .notification-wrapper {
+    top: 4.5rem !important;
+  }
+}
+
+/* High z-index to ensure visibility above all elements */
+.notification-wrapper {
+  z-index: 9999 !important;
+}
+
+/* Improve text readability on mobile */
 @media (max-width: 640px) {
-  .notification-item {
-    margin-left: 0.5rem;
-    margin-right: 0.5rem;
+  .notification-item h4 {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+  
+  .notification-item p {
+    font-size: 0.75rem;
+    line-height: 1rem;
   }
 }
 </style> 

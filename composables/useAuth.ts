@@ -1,3 +1,5 @@
+import { debug } from '~/utils/debug'
+
 interface User {
   id: number
   username: string
@@ -32,7 +34,7 @@ export const useAuth = () => {
           token.value = null
         }
       } catch (error) {
-        console.error('Failed to initialize user:', error)
+        debug.error('auth', 'Failed to initialize user:', error)
         token.value = null
       } finally {
         isLoading.value = false
@@ -44,7 +46,7 @@ export const useAuth = () => {
   const login = async (email: string, password: string) => {
     isLoading.value = true
     try {
-      console.log('🔍 useAuth: Calling auth.login...')
+      debug.log('auth', 'Attempting login')
       
       // Create credentials object with email and password
       const credentials = {
@@ -54,42 +56,42 @@ export const useAuth = () => {
       
       const result = await auth.login(credentials)
       
-      console.log('🔍 useAuth: Full result:', result)
-      console.log('🔍 useAuth: result.data:', result.data)
-      console.log('🔍 useAuth: result.error:', result.error)
-      console.log('🔍 useAuth: result.data?.user:', result.data?.user)
+      debug.log('auth', 'Login response received', {
+        hasUser: !!result.data?.user,
+        hasData: !!result.data,
+        hasError: !!result.error
+      })
       
       // Check if login was successful
       if (result.data?.user) {
-        console.log('✅ useAuth: User data found in result.data.user')
+        debug.log('auth', 'User data found in login response')
         // Backend returned user data directly
         user.value = result.data.user
         return { success: true }
       } else if (result.data && !result.error) {
-        console.log('✅ useAuth: Login successful, but no user data. Fetching profile...')
+        debug.log('auth', 'Login successful, fetching user profile')
         // Login successful but no user data returned
         // Fetch user profile separately
         try {
           const profileResult = await userApi.getProfile()
-          console.log('🔍 useAuth: Profile result:', profileResult)
           if (profileResult.data?.profile) {
-            console.log('✅ useAuth: Profile data found, setting user...')
+            debug.log('auth', 'Profile data retrieved successfully')
             user.value = profileResult.data.profile
             return { success: true }
           } else {
-            console.log('❌ useAuth: No profile data found')
+            debug.warn('auth', 'No profile data found after login')
             return { success: false, error: 'Failed to fetch user profile after login' }
           }
         } catch (profileError) {
-          console.error('💥 useAuth: Failed to fetch profile after login:', profileError)
+          debug.error('auth', 'Failed to fetch profile after login:', profileError)
           return { success: false, error: 'Failed to fetch user profile after login' }
         }
       } else {
-        console.log('❌ useAuth: Login failed or error occurred')
+        debug.warn('auth', 'Login failed', { error: result.error })
         return { success: false, error: result.error || 'Login failed' }
       }
     } catch (error: any) {
-      console.error('💥 useAuth: Login error:', error)
+      debug.error('auth', 'Login error:', error)
       return { success: false, error: error.message || 'Login failed' }
     } finally {
       isLoading.value = false
@@ -131,7 +133,7 @@ export const useAuth = () => {
         user.value = result.data.profile
       }
     } catch (error) {
-      console.error('Failed to refresh profile:', error)
+      debug.error('auth', 'Failed to refresh profile:', error)
     }
   }
 

@@ -1,21 +1,26 @@
+import { debug } from '~/utils/debug'
+
 export default defineNuxtRouteMiddleware(async (to, from) => {
   const { isAuthenticated, initialize, user } = useAuth()
   
-  console.log('🔐 Auth middleware: Checking authentication for', to.path)
-  console.log('🔐 Auth middleware: Current isAuthenticated:', isAuthenticated.value)
-  console.log('🔐 Auth middleware: Current user:', user.value)
+  debug.log('auth', `Checking authentication for ${to.path}`, {
+    isAuthenticated: isAuthenticated.value,
+    hasUser: !!user.value
+  })
   
   // Initialize auth state and wait for it to complete
   await initialize()
   
-  console.log('🔐 Auth middleware: After initialize - isAuthenticated:', isAuthenticated.value)
-  console.log('🔐 Auth middleware: After initialize - user:', user.value)
+  debug.log('auth', 'Auth initialization complete', {
+    isAuthenticated: isAuthenticated.value,
+    hasUser: !!user.value
+  })
   
   // If not authenticated, redirect to login
   if (!isAuthenticated.value) {
-    console.log('🔐 Auth middleware: Not authenticated, redirecting to login')
+    debug.warn('auth', 'Not authenticated, redirecting to login')
     return navigateTo('/login')
   }
   
-  console.log('🔐 Auth middleware: Authentication successful, allowing access')
+  debug.log('auth', 'Authentication successful, allowing access')
 }) 

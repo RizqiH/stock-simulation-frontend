@@ -68,6 +68,8 @@ interface TransactionRequest {
   price?: number
 }
 
+import { debug } from '~/utils/debug'
+
 export const useApi = () => {
   const config = useRuntimeConfig()
   const baseURL = config.public.apiBaseUrl || 'http://localhost:8082/api/v1'
@@ -83,22 +85,21 @@ export const useApi = () => {
   // Generic API call function
   const apiCall = async <T>(endpoint: string, options: any = {}): Promise<ApiResponse<T>> => {
     const fullUrl = `${baseURL}${endpoint}`
-    console.log(`🔍 [apiCall] Making request to: ${fullUrl}`)
-    console.log(`🔍 [apiCall] Headers:`, headers.value)
-    console.log(`🔍 [apiCall] Options:`, options)
+    debug.log('api', `Making request to: ${fullUrl}`, { headers: headers.value, options })
     
     try {
       const response = await $fetch<T>(fullUrl, {
         headers: headers.value,
         ...options
       })
-      console.log(`✅ [apiCall] Response received:`, response)
+      debug.log('api', `Response received from ${endpoint}:`, response)
       return { data: response }
     } catch (error: any) {
-      console.error('❌ [apiCall] Error occurred:', error)
-      console.error('❌ [apiCall] Error data:', error.data)
-      console.error('❌ [apiCall] Error status:', error.status)
-      console.error('❌ [apiCall] Error statusText:', error.statusText)
+      debug.error('api', `Error occurred for ${endpoint}:`, {
+        error: error.message,
+        status: error.status,
+        data: error.data
+      })
       return { error: error.data?.error || error.message || 'An error occurred' }
     }
   }
@@ -113,7 +114,7 @@ export const useApi = () => {
     },
 
     async login(credentials: { email: string; password: string }) {
-      console.log('🔍 useApi: Calling login API with credentials:', credentials.email)
+      debug.log('auth', `Attempting login for: ${credentials.email}`)
       const result = await apiCall<{ token: string; user: User }>('/auth/login', {
         method: 'POST',
         body: {
@@ -122,16 +123,17 @@ export const useApi = () => {
         }
       })
       
-      console.log('🔍 useApi: Raw API result:', result)
-      console.log('🔍 useApi: result.data:', result.data)
-      console.log('🔍 useApi: result.error:', result.error)
+      debug.log('auth', 'Login API result:', { 
+        hasToken: !!result.data?.token, 
+        hasUser: !!result.data?.user,
+        error: result.error 
+      })
       
       if (result.data?.token) {
-        console.log('✅ useApi: Token found, setting token...')
-        console.log('🔍 useApi: Token:', result.data.token)
+        debug.log('auth', 'Token received, setting auth token')
         token.value = result.data.token
       } else {
-        console.log('❌ useApi: No token found in response')
+        debug.warn('auth', 'No token found in login response')
       }
       
       return result
@@ -255,24 +257,23 @@ export const useApi = () => {
   // Charts API
   const charts = {
     async getChartData(symbol: string, period: string = '30D') {
-      console.log(`🔍 [useApi] Getting chart data for ${symbol}, period: ${period}`)
-      console.log(`🔍 [useApi] Full URL: ${baseURL}/charts/${symbol}?period=${period}`)
+      debug.log('charts', `Getting chart data for ${symbol}`, { period })
       const result = await apiCall<any>(`/charts/${symbol}?period=${period}`)
-      console.log(`🔍 [useApi] Chart data result:`, result)
+      debug.log('charts', `Chart data received for ${symbol}`, { hasData: !!result.data })
       return result
     },
 
     async getHistoricalPrices(symbol: string, limit: number = 30) {
-      console.log(`🔍 [useApi] Getting historical prices for ${symbol}, limit: ${limit}`)
+      debug.log('charts', `Getting historical prices for ${symbol}`, { limit })
       return apiCall<any>(`/charts/${symbol}/history?limit=${limit}`)
     },
 
     async getAvailableSymbols() {
-      console.log(`🔍 [useApi] Getting available symbols`)
+      debug.log('charts', 'Getting available symbols')
       // Add cache busting
       const timestamp = Date.now()
       const result = await apiCall<{ symbols: string[] }>(`/charts/symbols?_t=${timestamp}`)
-      console.log(`🔍 [useApi] Available symbols result:`, result)
+      debug.log('charts', 'Available symbols received', { count: result.data?.symbols?.length })
       return result
     }
   }

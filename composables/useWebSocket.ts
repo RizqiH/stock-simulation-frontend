@@ -1,3 +1,5 @@
+import { debug } from '~/utils/debug'
+
 interface PriceUpdate {
   symbol: string
   price: number
@@ -78,12 +80,12 @@ export const useWebSocket = (options: WebSocketOptions = {}) => {
       connectionError.value = null
 
       const wsUrl = getWebSocketUrl()
-      console.log(`🔌 [WebSocket] Connecting to: ${wsUrl}`)
+      debug.log('websocket', `Connecting to: ${wsUrl}`)
 
       ws = new WebSocket(wsUrl)
 
       ws.onopen = () => {
-        console.log('✅ [WebSocket] Connected successfully')
+        debug.log('websocket', 'Connected successfully')
         isConnected.value = true
         isConnecting.value = false
         reconnectCount.value = 0
@@ -101,18 +103,18 @@ export const useWebSocket = (options: WebSocketOptions = {}) => {
           lastMessage.value = message
           handleMessage(message)
         } catch (error) {
-          console.error('❌ [WebSocket] Failed to parse message:', error)
+          debug.error('websocket', 'Failed to parse message:', error)
         }
       }
 
       ws.onerror = (error) => {
-        console.error('❌ [WebSocket] Connection error:', error)
+        debug.error('websocket', 'Connection error:', error)
         connectionError.value = 'WebSocket connection error'
         isConnecting.value = false
       }
 
       ws.onclose = (event) => {
-        console.log(`🔌 [WebSocket] Connection closed (code: ${event.code})`)
+        debug.log('websocket', `Connection closed (code: ${event.code})`)
         isConnected.value = false
         isConnecting.value = false
         stopHeartbeat()
@@ -127,7 +129,7 @@ export const useWebSocket = (options: WebSocketOptions = {}) => {
       }
 
     } catch (error: any) {
-      console.error('❌ [WebSocket] Connection failed:', error)
+      debug.error('websocket', 'Connection failed:', error)
       isConnecting.value = false
       connectionError.value = error.message || 'Failed to connect'
     }
@@ -149,7 +151,7 @@ export const useWebSocket = (options: WebSocketOptions = {}) => {
   const handleMessage = (message: WebSocketMessage) => {
     switch (message.type) {
       case 'welcome':
-        console.log('👋 [WebSocket] Welcome message:', message.message)
+        debug.log('websocket', 'Welcome message received', { clientId: message.client_id })
         clientId.value = message.client_id || null
         break
 
@@ -160,21 +162,24 @@ export const useWebSocket = (options: WebSocketOptions = {}) => {
         break
 
       case 'pong':
-        console.log('🏓 [WebSocket] Pong received')
+        debug.debug('websocket', 'Pong received')
         break
 
       case 'heartbeat':
-        console.log('💓 [WebSocket] Heartbeat received')
+        debug.debug('websocket', 'Heartbeat received')
         break
 
       default:
-        console.log('🔍 [WebSocket] Unknown message type:', message.type)
+        debug.warn('websocket', 'Unknown message type:', message.type)
     }
   }
 
   // Handle price updates
   const handlePriceUpdate = (update: PriceUpdate) => {
-    console.log(`📈 [WebSocket] Price update for ${update.symbol}: $${update.price} (${update.change_percent > 0 ? '+' : ''}${update.change_percent.toFixed(2)}%)`)
+    debug.debug('websocket', `Price update for ${update.symbol}`, {
+      price: update.price,
+      change: update.change_percent
+    })
     
     // Store the update
     priceUpdates.value.set(update.symbol, update)
@@ -185,7 +190,7 @@ export const useWebSocket = (options: WebSocketOptions = {}) => {
       try {
         callback(update)
       } catch (error) {
-        console.error(`❌ [WebSocket] Callback error for ${update.symbol}:`, error)
+        debug.error('websocket', `Callback error for ${update.symbol}:`, error)
       }
     })
     
@@ -195,7 +200,7 @@ export const useWebSocket = (options: WebSocketOptions = {}) => {
       try {
         callback(update)
       } catch (error) {
-        console.error(`❌ [WebSocket] Global callback error:`, error)
+        debug.error('websocket', 'Global callback error:', error)
       }
     })
   }
@@ -207,7 +212,7 @@ export const useWebSocket = (options: WebSocketOptions = {}) => {
     }
     updateCallbacks.value.get(symbol)!.push(callback)
     
-    console.log(`🔔 [WebSocket] Subscribed to ${symbol} price updates`)
+    debug.log('websocket', `Subscribed to ${symbol} price updates`)
     
     // Return unsubscribe function
     return () => {
@@ -216,7 +221,7 @@ export const useWebSocket = (options: WebSocketOptions = {}) => {
         const index = callbacks.indexOf(callback)
         if (index > -1) {
           callbacks.splice(index, 1)
-          console.log(`🔕 [WebSocket] Unsubscribed from ${symbol} price updates`)
+          debug.log('websocket', `Unsubscribed from ${symbol} price updates`)
         }
       }
     }
@@ -248,7 +253,9 @@ export const useWebSocket = (options: WebSocketOptions = {}) => {
     }
 
     reconnectCount.value++
-    console.log(`🔄 [WebSocket] Scheduling reconnection attempt ${reconnectCount.value}/${reconnectAttempts} in ${reconnectInterval}ms`)
+    debug.log('websocket', `Scheduling reconnection attempt ${reconnectCount.value}/${reconnectAttempts}`, {
+      interval: reconnectInterval
+    })
 
     reconnectTimer = setTimeout(() => {
       if (!isConnected.value && !isConnecting.value) {
