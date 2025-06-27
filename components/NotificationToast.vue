@@ -5,7 +5,7 @@
         <div 
           v-if="notifications.length > 0"
           class="fixed inset-x-0 z-[9999] pointer-events-none notification-wrapper"
-          :class="isMobile ? 'top-[4rem] pt-4' : 'top-20 pt-2'"
+          :class="isMobile ? 'top-[4.5rem] pt-2' : 'top-20 pt-2'"
         >
           <div class="flex flex-col space-y-2 px-4 lg:pr-6" :class="isMobile ? 'items-center' : 'items-center lg:items-end'">
             <TransitionGroup name="notification" tag="div" class="flex flex-col space-y-2 w-full max-w-sm lg:max-w-md">
@@ -19,7 +19,7 @@
                   class="flex items-start gap-3 p-3 lg:p-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg border-l-4 mx-auto lg:mx-0"
                   :class="[
                     getBorderColorClass(notification.type),
-                    isMobile ? 'max-w-[calc(100vw-2rem)]' : 'lg:w-96'
+                    isMobile ? 'max-w-[calc(100vw-1rem)] mx-2' : 'lg:w-96'
                   ]"
                 >
                   <div class="flex-shrink-0 mt-0.5">
@@ -241,20 +241,20 @@ onUnmounted(() => {
 @media (max-width: 640px) {
   .notification-wrapper {
     /* Ensure notifications are visible on mobile */
-    top: 4rem !important;
-    padding-top: 1rem;
+    top: 4.5rem !important;
+    padding-top: 0.5rem;
   }
   
   .notification-item {
     /* Mobile-specific adjustments */
-    margin-left: 0.5rem;
-    margin-right: 0.5rem;
+    margin-left: 0.25rem;
+    margin-right: 0.25rem;
   }
   
   /* Handle notches and safe areas on mobile */
   @supports (top: env(safe-area-inset-top)) {
     .notification-wrapper {
-      top: calc(4rem + env(safe-area-inset-top)) !important;
+      top: calc(4.5rem + env(safe-area-inset-top)) !important;
     }
   }
 }
@@ -277,6 +277,36 @@ onUnmounted(() => {
 /* High z-index to ensure visibility above all elements */
 .notification-wrapper {
   z-index: 9999 !important;
+}
+
+/* Extra small mobile devices (320px width) */
+@media (max-width: 360px) {
+  .notification-wrapper {
+    top: 4.25rem !important;
+    padding-top: 0.25rem;
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+  }
+  
+  .notification-item {
+    margin-left: 0.125rem;
+    margin-right: 0.125rem;
+  }
+  
+  /* Reduce padding and font sizes for very small screens */
+  .notification-item .flex {
+    padding: 0.5rem !important;
+  }
+  
+  .notification-item h4 {
+    font-size: 0.8rem !important;
+    line-height: 1.1rem !important;
+  }
+  
+  .notification-item p {
+    font-size: 0.7rem !important;
+    line-height: 0.9rem !important;
+  }
 }
 
 /* Improve text readability on mobile */

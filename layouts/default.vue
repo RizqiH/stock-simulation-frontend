@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       <!-- Navigation -->
-      <header class="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50">
+      <header class="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 safe-top">
         <UContainer>
           <div class="flex items-center justify-between h-16">
             <!-- Logo and Brand -->
@@ -170,7 +170,7 @@
                 variant="ghost"
                 size="sm"
                 icon="i-heroicons-bars-3"
-                class="lg:hidden text-gray-600 dark:text-gray-400"
+                class="lg:hidden text-gray-600 dark:text-gray-400 touch-target"
               />
             </div>
           </div>
@@ -246,7 +246,7 @@
       <NotificationToast />
 
       <!-- Main Content -->
-      <main class="flex-1 pt-16">
+      <main class="flex-1 mt-16 sm:mt-16">
         <slot />
       </main>
 
@@ -517,6 +517,40 @@ const formatTime = (timestamp) => {
 
 .dark .notification-card.bg-blue-50 {
   @apply bg-blue-900/20 border-blue-400/50;
+}
+
+/* Mobile layout optimizations */
+@media (max-width: 360px) {
+  /* Extra small mobile specific adjustments */
+  .nav-link {
+    @apply px-2 py-1.5 text-xs;
+  }
+  
+  .mobile-nav-link {
+    @apply px-3 py-2 text-xs;
+  }
+  
+  /* Ensure proper spacing on very small screens */
+  .min-h-screen {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* Fix for mobile viewport */
+@supports (-webkit-touch-callout: none) {
+  .min-h-screen {
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* Ensure no overlapping elements */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>
 
