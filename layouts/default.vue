@@ -82,15 +82,7 @@
                 class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
               />
 
-              <!-- Test Notification Button -->
-              <UButton
-                @click="testNotification"
-                variant="ghost"
-                size="sm"
-                icon="i-heroicons-bell-alert"
-                class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-                title="Test Notification"
-              />
+
 
               <!-- Notifications -->
               <UPopover v-if="isAuthenticated && notifications.length > 0">
@@ -335,7 +327,7 @@ const { user, isAuthenticated, logout } = useAuth()
 const { notifications, removeNotification, clearAll } = useNotifications()
 const { isDark, toggleDark } = useTheme()
 
-// Note: Test notification button is always available for testing mobile notifications
+
 
 // Reactive data
 const showMobileMenu = ref(false)
@@ -405,20 +397,7 @@ const formatTime = (timestamp) => {
   return timestamp.toLocaleDateString()
 }
 
-// Test notification function for development
-const testNotification = () => {
-  const { success, error, warning, info } = useNotifications()
-  const types = [
-    () => success('Test Success', 'This is a test success notification'),
-    () => error('Test Error', 'This is a test error notification'), 
-    () => warning('Test Warning', 'This is a test warning notification'),
-    () => info('Test Info', 'This is a test info notification')
-  ]
-  
-  // Send a random notification type
-  const randomType = types[Math.floor(Math.random() * types.length)]
-  randomType()
-}
+
 </script>
 
 <style scoped>
