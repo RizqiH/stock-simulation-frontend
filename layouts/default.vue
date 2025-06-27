@@ -155,7 +155,7 @@
               </UDropdown>
 
               <!-- Login/Register (if not authenticated) -->
-              <div v-else class="flex items-center gap-2">
+              <div v-else class="hidden sm:flex items-center gap-2">
                 <UButton to="/login" variant="ghost" size="sm">
                   Login
                 </UButton>
@@ -236,6 +236,31 @@
               <div v-if="isAuthenticated && user?.balance" class="mobile-nav-link border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
                 <UIcon name="i-heroicons-currency-dollar" class="w-5 h-5 text-emerald-600" />
                 Balance: ${{ user.balance.toLocaleString() }}
+              </div>
+              
+              <!-- Mobile Login/Register (if not authenticated) -->
+              <div v-if="!isAuthenticated" class="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
+                <div class="flex flex-col space-y-2 px-2">
+                  <UButton 
+                    to="/login" 
+                    variant="ghost" 
+                    size="sm" 
+                    class="w-full justify-center"
+                    @click="showMobileMenu = false"
+                  >
+                    <UIcon name="i-heroicons-arrow-right-on-rectangle" class="w-4 h-4 mr-2" />
+                    Login
+                  </UButton>
+                  <UButton 
+                    to="/register" 
+                    size="sm" 
+                    class="w-full justify-center"
+                    @click="showMobileMenu = false"
+                  >
+                    <UIcon name="i-heroicons-user-plus" class="w-4 h-4 mr-2" />
+                    Register
+                  </UButton>
+                </div>
               </div>
             </div>
           </div>
