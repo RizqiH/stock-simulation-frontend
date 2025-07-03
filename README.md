@@ -55,4 +55,72 @@ enableDebug(['auth'])
 - 🔒 Security warnings when enabling sensitive modules
 - 🔒 Sensitive data replaced with `***FILTERED***`
 
+## Troubleshooting
+
+### 🔧 Hydration Mismatch Errors
+
+If you encounter "Hydration completed but contains mismatches" errors:
+
+#### ✅ Solutions:
+1. **Use ClientOnly wrapper** for dynamic content:
+   ```vue
+   <ClientOnly>
+     <component-with-dynamic-data />
+     <template #fallback>
+       <loading-skeleton />
+     </template>
+   </ClientOnly>
+   ```
+
+2. **Ensure SSR-safe state management**:
+   ```javascript
+   const isAuthenticated = computed(() => {
+     // During SSR, only check basic conditions
+     if (!process.client) return !!token.value
+     
+     // On client, check full state
+     return !!token.value && !!user.value
+   })
+   ```
+
+3. **Initialize data properly**:
+   ```javascript
+   // ❌ Don't do this
+   const data = ref(Date.now()) // Different on server/client
+   
+   // ✅ Do this instead
+   const data = ref(null)
+   onMounted(() => {
+     data.value = Date.now()
+   })
+   ```
+
+### 🔌 Browser Extension Errors
+
+Extension errors like "runtime.lastError" are automatically filtered out by our error handler plugin.
+
+#### Manual filtering (if needed):
+```javascript
+// In plugins/error-handler.client.ts
+console.error = (...args) => {
+  const message = args[0]?.toString() || ''
+  if (message.includes('runtime.lastError')) return
+  originalError.apply(console, args)
+}
+```
+
+### 🚨 Common Issues:
+
+1. **Authentication state mismatch**:
+   - Use `isHydrated` flag before rendering auth-dependent content
+   - Wrap auth components with `ClientOnly`
+
+2. **Time-sensitive data**:
+   - Avoid server/client timestamp differences
+   - Use `ClientOnly` for real-time components
+
+3. **Dynamic imports**:
+   - Use `ClientOnly` for heavy components
+   - Provide fallback loading states
+
 

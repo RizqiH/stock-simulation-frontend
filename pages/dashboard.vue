@@ -21,30 +21,44 @@
           </div>
           
           <!-- Portfolio Value Card -->
-          <UCard class="p-6">
-            <div class="flex items-center gap-4">
-              <div class="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
-                <UIcon name="i-heroicons-currency-dollar" class="w-8 h-8 text-white" />
+          <ClientOnly>
+            <UCard class="p-6">
+              <div class="flex items-center gap-4">
+                <div class="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
+                  <UIcon name="i-heroicons-currency-dollar" class="w-8 h-8 text-white" />
+                </div>
+                <div>
+                  <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Portfolio Value</p>
+                  <p class="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
+                    ${{ portfolioValue.toLocaleString() }}
+                  </p>
+                  <UBadge
+                    :color="portfolioChange >= 0 ? 'emerald' : 'red'"
+                    variant="soft"
+                    size="sm"
+                  >
+                    <UIcon 
+                      :name="portfolioChange >= 0 ? 'i-heroicons-arrow-trending-up' : 'i-heroicons-arrow-trending-down'" 
+                      class="w-3 h-3 mr-1"
+                    />
+                    {{ portfolioChange >= 0 ? '+' : '' }}{{ portfolioChangePct.toFixed(2) }}%
+                  </UBadge>
+                </div>
               </div>
-              <div>
-                <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Portfolio Value</p>
-                <p class="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
-                  ${{ portfolioValue.toLocaleString() }}
-                </p>
-                <UBadge
-                  :color="portfolioChange >= 0 ? 'emerald' : 'red'"
-                  variant="soft"
-                  size="sm"
-                >
-                  <UIcon 
-                    :name="portfolioChange >= 0 ? 'i-heroicons-arrow-trending-up' : 'i-heroicons-arrow-trending-down'" 
-                    class="w-3 h-3 mr-1"
-                  />
-                  {{ portfolioChange >= 0 ? '+' : '' }}{{ portfolioChangePct.toFixed(2) }}%
-                </UBadge>
-              </div>
-            </div>
-          </UCard>
+            </UCard>
+            <template #fallback>
+              <UCard class="p-6">
+                <div class="flex items-center gap-4">
+                  <div class="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse"></div>
+                  <div class="space-y-2">
+                    <div class="w-24 h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                    <div class="w-32 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                    <div class="w-16 h-6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                  </div>
+                </div>
+              </UCard>
+            </template>
+          </ClientOnly>
         </div>
       </UContainer>
     </section>
@@ -59,64 +73,78 @@
             <UCard class="p-8">
               <div class="flex items-center justify-between mb-8">
                 <h3 class="text-2xl font-bold text-gray-900 dark:text-white">Portfolio Overview</h3>
-                <UButton
-                  @click="refreshData"
-                  :disabled="isRefreshing"
-                  variant="outline"
-                  size="sm"
-                  icon="i-heroicons-arrow-path"
-                  :loading="isRefreshing"
-                >
-                  {{ isRefreshing ? 'Refreshing...' : 'Refresh' }}
-                </UButton>
+                <ClientOnly>
+                  <UButton
+                    @click="refreshData"
+                    :disabled="isRefreshing"
+                    variant="outline"
+                    size="sm"
+                    icon="i-heroicons-arrow-path"
+                    :loading="isRefreshing"
+                  >
+                    {{ isRefreshing ? 'Refreshing...' : 'Refresh' }}
+                  </UButton>
+                </ClientOnly>
               </div>
               
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <!-- Total Value -->
-                <div class="text-center">
-                  <div class="w-16 h-16 bg-gradient-to-br from-primary-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-                    <UIcon name="i-heroicons-chart-bar" class="w-8 h-8 text-white" />
+              <ClientOnly>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  <!-- Total Value -->
+                  <div class="text-center">
+                    <div class="w-16 h-16 bg-gradient-to-br from-primary-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+                      <UIcon name="i-heroicons-chart-bar" class="w-8 h-8 text-white" />
+                    </div>
+                    <h4 class="text-sm text-gray-600 dark:text-gray-400 mb-2 font-medium">Total Value</h4>
+                    <p class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                      ${{ portfolioValue.toLocaleString() }}
+                    </p>
+                    <UBadge :color="portfolioChange >= 0 ? 'emerald' : 'red'" variant="soft">
+                      {{ portfolioChange >= 0 ? '+' : '' }}${{ Math.abs(portfolioChange).toLocaleString() }}
+                    </UBadge>
                   </div>
-                  <h4 class="text-sm text-gray-600 dark:text-gray-400 mb-2 font-medium">Total Value</h4>
-                  <p class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                    ${{ portfolioValue.toLocaleString() }}
-                  </p>
-                  <UBadge :color="portfolioChange >= 0 ? 'emerald' : 'red'" variant="soft">
-                    {{ portfolioChange >= 0 ? '+' : '' }}${{ Math.abs(portfolioChange).toLocaleString() }}
-                  </UBadge>
-                </div>
-                
-                <!-- Available Cash -->
-                <div class="text-center">
-                  <div class="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-                    <UIcon name="i-heroicons-currency-dollar" class="w-8 h-8 text-white" />
+                  
+                  <!-- Available Cash -->
+                  <div class="text-center">
+                    <div class="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+                      <UIcon name="i-heroicons-currency-dollar" class="w-8 h-8 text-white" />
+                    </div>
+                    <h4 class="text-sm text-gray-600 dark:text-gray-400 mb-2 font-medium">Available Cash</h4>
+                    <p class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                      ${{ user?.balance?.toLocaleString() || '0' }}
+                    </p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                      {{ ((user?.balance || 0) / portfolioValue * 100).toFixed(1) }}% of portfolio
+                    </p>
                   </div>
-                  <h4 class="text-sm text-gray-600 dark:text-gray-400 mb-2 font-medium">Available Cash</h4>
-                  <p class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                    ${{ user?.balance?.toLocaleString() || '0' }}
-                  </p>
-                  <p class="text-sm text-gray-600 dark:text-gray-400">
-                    {{ ((user?.balance || 0) / portfolioValue * 100).toFixed(1) }}% of portfolio
-                  </p>
-                </div>
-                
-                <!-- Total Profit -->
-                <div class="text-center">
-                  <div class="w-16 h-16 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-                    <UIcon name="i-heroicons-arrow-trending-up" class="w-8 h-8 text-white" />
+                  
+                  <!-- Total Profit -->
+                  <div class="text-center">
+                    <div class="w-16 h-16 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+                      <UIcon name="i-heroicons-arrow-trending-up" class="w-8 h-8 text-white" />
+                    </div>
+                    <h4 class="text-sm text-gray-600 dark:text-gray-400 mb-2 font-medium">Total Profit</h4>
+                    <p :class="[
+                      'text-3xl font-bold mb-2',
+                      (user?.total_profit || 0) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
+                    ]">
+                      {{ (user?.total_profit || 0) >= 0 ? '+' : '' }}${{ Math.abs(user?.total_profit || 0).toLocaleString() }}
+                    </p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                      All-time performance
+                    </p>
                   </div>
-                  <h4 class="text-sm text-gray-600 dark:text-gray-400 mb-2 font-medium">Total Profit</h4>
-                  <p :class="[
-                    'text-3xl font-bold mb-2',
-                    (user?.total_profit || 0) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
-                  ]">
-                    {{ (user?.total_profit || 0) >= 0 ? '+' : '' }}${{ Math.abs(user?.total_profit || 0).toLocaleString() }}
-                  </p>
-                  <p class="text-sm text-gray-600 dark:text-gray-400">
-                    All-time performance
-                  </p>
                 </div>
-              </div>
+                <template #fallback>
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div v-for="i in 3" :key="i" class="text-center">
+                      <div class="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-xl mx-auto mb-4 animate-pulse"></div>
+                      <div class="w-20 h-4 bg-gray-200 dark:bg-gray-700 rounded mx-auto mb-2 animate-pulse"></div>
+                      <div class="w-24 h-8 bg-gray-200 dark:bg-gray-700 rounded mx-auto mb-2 animate-pulse"></div>
+                      <div class="w-16 h-6 bg-gray-200 dark:bg-gray-700 rounded mx-auto animate-pulse"></div>
+                    </div>
+                  </div>
+                </template>
+              </ClientOnly>
             </UCard>
 
             <!-- Portfolio Holdings -->
@@ -218,23 +246,25 @@
             </UCard>
 
             <!-- User Ranking -->
-            <UCard v-if="user?.rank">
-              <template #header>
-                <h3 class="text-xl font-bold text-gray-900 dark:text-white">Your Ranking</h3>
-              </template>
-              <div class="p-8 text-center">
-                <div class="w-20 h-20 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <span class="text-2xl font-bold text-white">#{{ user.rank }}</span>
+            <ClientOnly>
+              <UCard v-if="user?.rank">
+                <template #header>
+                  <h3 class="text-xl font-bold text-gray-900 dark:text-white">Your Ranking</h3>
+                </template>
+                <div class="p-8 text-center">
+                  <div class="w-20 h-20 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <span class="text-2xl font-bold text-white">#{{ user.rank }}</span>
+                  </div>
+                  <h4 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Rank {{ user.rank }}</h4>
+                  <p class="text-gray-600 dark:text-gray-400 mb-6">
+                    Global ranking among all traders
+                  </p>
+                  <UButton to="/leaderboard" block>
+                    View Full Leaderboard
+                  </UButton>
                 </div>
-                <h4 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Rank {{ user.rank }}</h4>
-                <p class="text-gray-600 dark:text-gray-400 mb-6">
-                  Global ranking among all traders
-                </p>
-                <UButton to="/leaderboard" block>
-                  View Full Leaderboard
-                </UButton>
-              </div>
-            </UCard>
+              </UCard>
+            </ClientOnly>
             
             <!-- Trading Tips -->
             <UCard>

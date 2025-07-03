@@ -16,8 +16,7 @@ export default defineNuxtConfig({
 
   // ===== UI CONFIGURATION (v2) =====
   ui: {
-    global: true,
-    icons: ['heroicons']
+    global: true
   },
 
   // ===== TAILWINDCSS CONFIGURATION =====
@@ -74,6 +73,11 @@ export default defineNuxtConfig({
   // ===== SSR CONFIGURATION =====
   ssr: true,
 
+  // ===== HYDRATION CONFIGURATION =====
+  experimental: {
+    payloadExtraction: false,
+  },
+
   // ===== NITRO CONFIGURATION =====
   nitro: {
     esbuild: {
@@ -91,6 +95,16 @@ export default defineNuxtConfig({
           includeAbsolute: false
         }
       }
+    },
+    define: {
+      __DEV__: process.env.NODE_ENV === 'development'
+    }
+  },
+
+  // ===== CLIENT-SIDE NAVIGATION =====
+  router: {
+    options: {
+      hashMode: false
     }
   }
 })

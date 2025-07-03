@@ -12,18 +12,32 @@ interface User {
 // Global state to ensure state is shared across all instances
 const globalUser = ref<User | null>(null)
 const globalIsLoading = ref(false)
+const globalIsHydrated = ref(false)
 
 export const useAuth = () => {
   const { auth, user: userApi } = useApi()
   const token = useCookie('auth-token')
   const user = globalUser
   const isLoading = globalIsLoading
+  const isHydrated = globalIsHydrated
 
-  const isAuthenticated = computed(() => !!token.value && !!user.value)
+  // Safe computed for SSR
+  const isAuthenticated = computed(() => {
+    // During SSR, only check token existence
+    if (!process.client) {
+      return !!token.value
+    }
+    
+    // On client, check both token and user after hydration
+    return !!token.value && !!user.value
+  })
 
   // Initialize user data if token exists
   const initialize = async () => {
-    if (token.value && !user.value) {
+    // Skip during SSR
+    if (!process.client) return
+    
+    if (token.value && !user.value && !isLoading.value) {
       isLoading.value = true
       try {
         const result = await userApi.getProfile()
@@ -38,7 +52,10 @@ export const useAuth = () => {
         token.value = null
       } finally {
         isLoading.value = false
+        isHydrated.value = true
       }
+    } else if (!token.value) {
+      isHydrated.value = true
     }
   }
 
@@ -150,6 +167,7 @@ export const useAuth = () => {
     user: readonly(user),
     isAuthenticated,
     isLoading: readonly(isLoading),
+    isHydrated,
     initialize,
     login,
     register,

@@ -74,95 +74,103 @@
             <!-- Right side controls -->
             <div class="flex items-center gap-4">
               <!-- Theme Toggle -->
-              <UButton
-                @click="toggleDark"
-                variant="ghost"
-                size="sm"
-                :icon="isDark ? 'i-heroicons-sun' : 'i-heroicons-moon'"
-                class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-              />
-
-
-
-              <!-- Notifications -->
-              <UPopover v-if="isAuthenticated && notifications.length > 0">
+              <ClientOnly>
                 <UButton
+                  @click="toggleDark"
                   variant="ghost"
                   size="sm"
-                  icon="i-heroicons-bell"
-                  :badge="notifications.length"
+                  :icon="isDark ? 'i-heroicons-sun' : 'i-heroicons-moon'"
                   class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                 />
-                
-                <template #panel>
-                  <div class="p-4 w-80">
-                    <div class="flex items-center justify-between mb-4">
-                      <h3 class="font-semibold text-gray-900 dark:text-white">Notifications</h3>
-                      <UButton @click="clearAll" variant="ghost" size="xs">Clear All</UButton>
-                    </div>
-                    
-                    <div class="space-y-3 max-h-64 overflow-y-auto">
-                      <div 
-                        v-for="notification in notifications.slice(0, 5)"
-                        :key="notification.id"
-                        class="p-3 rounded-lg border border-gray-200 dark:border-gray-700"
-                      >
-                        <div class="flex items-start justify-between">
-                          <div class="flex-1">
-                            <h4 class="font-medium text-sm text-gray-900 dark:text-white">
-                              {{ notification.title }}
-                            </h4>
-                            <p v-if="notification.message" class="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                              {{ notification.message }}
-                            </p>
+              </ClientOnly>
+
+              <!-- Notifications -->
+              <ClientOnly>
+                <UPopover v-if="isAuthenticated && notifications.length > 0">
+                  <UButton
+                    variant="ghost"
+                    size="sm"
+                    icon="i-heroicons-bell"
+                    :badge="notifications.length"
+                    class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                  />
+                  
+                  <template #panel>
+                    <div class="p-4 w-80">
+                      <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-semibold text-gray-900 dark:text-white">Notifications</h3>
+                        <UButton @click="clearAll" variant="ghost" size="xs">Clear All</UButton>
+                      </div>
+                      
+                      <div class="space-y-3 max-h-64 overflow-y-auto">
+                        <div 
+                          v-for="notification in notifications.slice(0, 5)"
+                          :key="notification.id"
+                          class="p-3 rounded-lg border border-gray-200 dark:border-gray-700"
+                        >
+                          <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                              <h4 class="font-medium text-sm text-gray-900 dark:text-white">
+                                {{ notification.title }}
+                              </h4>
+                              <p v-if="notification.message" class="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                {{ notification.message }}
+                              </p>
+                            </div>
+                            <UButton
+                              @click="removeNotification(notification.id)"
+                              variant="ghost"
+                              size="xs"
+                              icon="i-heroicons-x-mark"
+                            />
                           </div>
-                          <UButton
-                            @click="removeNotification(notification.id)"
-                            variant="ghost"
-                            size="xs"
-                            icon="i-heroicons-x-mark"
-                          />
                         </div>
                       </div>
                     </div>
-                  </div>
-                </template>
-              </UPopover>
+                  </template>
+                </UPopover>
+              </ClientOnly>
 
               <!-- User Balance (if authenticated) -->
-              <div v-if="isAuthenticated && user?.balance" class="hidden md:block">
-                <div class="px-3 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700/30 rounded-lg">
-                  <div class="flex items-center gap-2">
-                    <UIcon name="i-heroicons-currency-dollar" class="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                    <span class="text-sm font-semibold text-emerald-900 dark:text-emerald-100">
-                      ${{ user.balance.toLocaleString() }}
-                    </span>
+              <ClientOnly>
+                <div v-if="isAuthenticated && user?.balance" class="hidden md:block">
+                  <div class="px-3 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700/30 rounded-lg">
+                    <div class="flex items-center gap-2">
+                      <UIcon name="i-heroicons-currency-dollar" class="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                      <span class="text-sm font-semibold text-emerald-900 dark:text-emerald-100">
+                        ${{ user.balance.toLocaleString() }}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </ClientOnly>
 
               <!-- User Menu (if authenticated) -->
-              <UDropdown v-if="isAuthenticated && user" :items="userMenuItems">
-                <UButton variant="ghost" class="flex items-center gap-2">
-                  <UAvatar
-                    :text="user.username?.charAt(0) || 'U'"
-                    size="sm"
-                    class="bg-gradient-to-br from-primary-500 to-purple-600"
-                  />
-                  <span class="hidden md:inline text-gray-900 dark:text-white">{{ user.username }}</span>
-                  <UIcon name="i-heroicons-chevron-down" class="w-4 h-4 text-gray-400" />
-                </UButton>
-              </UDropdown>
+              <ClientOnly>
+                <UDropdown v-if="isAuthenticated && user" :items="userMenuItems">
+                  <UButton variant="ghost" class="flex items-center gap-2">
+                    <UAvatar
+                      :text="user.username?.charAt(0) || 'U'"
+                      size="sm"
+                      class="bg-gradient-to-br from-primary-500 to-purple-600"
+                    />
+                    <span class="hidden md:inline text-gray-900 dark:text-white">{{ user.username }}</span>
+                    <UIcon name="i-heroicons-chevron-down" class="w-4 h-4 text-gray-400" />
+                  </UButton>
+                </UDropdown>
+              </ClientOnly>
 
               <!-- Login/Register (if not authenticated) -->
-              <div v-else class="hidden sm:flex items-center gap-2">
-                <UButton to="/login" variant="ghost" size="sm">
-                  Login
-                </UButton>
-                <UButton to="/register" size="sm">
-                  Register
-                </UButton>
-              </div>
+              <ClientOnly>
+                <div v-if="!isAuthenticated" class="hidden sm:flex items-center gap-2">
+                  <UButton to="/login" variant="ghost" size="sm">
+                    Login
+                  </UButton>
+                  <UButton to="/register" size="sm">
+                    Register
+                  </UButton>
+                </div>
+              </ClientOnly>
 
               <!-- Mobile Menu Toggle -->
               <UButton
@@ -176,94 +184,96 @@
           </div>
 
           <!-- Mobile Navigation -->
-          <div v-if="showMobileMenu" class="md:hidden">
-            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
-              <NuxtLink 
-                v-if="isAuthenticated"
-                to="/dashboard" 
-                class="mobile-nav-link"
-                @click="showMobileMenu = false"
-              >
-                <UIcon name="i-heroicons-squares-2x2" class="w-5 h-5" />
-                Dashboard
-              </NuxtLink>
-              <NuxtLink 
-                to="/market" 
-                class="mobile-nav-link"
-                @click="showMobileMenu = false"
-              >
-                <UIcon name="i-heroicons-chart-bar" class="w-5 h-5" />
-                Market
-              </NuxtLink>
-              <NuxtLink 
-                v-if="isAuthenticated"
-                to="/portfolio" 
-                class="mobile-nav-link"
-                @click="showMobileMenu = false"
-              >
-                <UIcon name="i-heroicons-briefcase" class="w-5 h-5" />
-                Portfolio
-              </NuxtLink>
-              <NuxtLink 
-                v-if="isAuthenticated"
-                to="/watchlist" 
-                class="mobile-nav-link"
-                @click="showMobileMenu = false"
-              >
-                <UIcon name="i-heroicons-heart" class="w-5 h-5" />
-                Watchlist
-              </NuxtLink>
+          <ClientOnly>
+            <div v-if="showMobileMenu" class="md:hidden">
+              <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
+                <NuxtLink 
+                  v-if="isAuthenticated"
+                  to="/dashboard" 
+                  class="mobile-nav-link"
+                  @click="showMobileMenu = false"
+                >
+                  <UIcon name="i-heroicons-squares-2x2" class="w-5 h-5" />
+                  Dashboard
+                </NuxtLink>
+                <NuxtLink 
+                  to="/market" 
+                  class="mobile-nav-link"
+                  @click="showMobileMenu = false"
+                >
+                  <UIcon name="i-heroicons-chart-bar" class="w-5 h-5" />
+                  Market
+                </NuxtLink>
+                <NuxtLink 
+                  v-if="isAuthenticated"
+                  to="/portfolio" 
+                  class="mobile-nav-link"
+                  @click="showMobileMenu = false"
+                >
+                  <UIcon name="i-heroicons-briefcase" class="w-5 h-5" />
+                  Portfolio
+                </NuxtLink>
+                <NuxtLink 
+                  v-if="isAuthenticated"
+                  to="/watchlist" 
+                  class="mobile-nav-link"
+                  @click="showMobileMenu = false"
+                >
+                  <UIcon name="i-heroicons-heart" class="w-5 h-5" />
+                  Watchlist
+                </NuxtLink>
 
-              <NuxtLink 
-                v-if="isAuthenticated"
-                to="/transactions" 
-                class="mobile-nav-link"
-                @click="showMobileMenu = false"
-              >
-                <UIcon name="i-heroicons-document-text" class="w-5 h-5" />
-                Transactions
-              </NuxtLink>
-              <NuxtLink 
-                to="/leaderboard" 
-                class="mobile-nav-link"
-                @click="showMobileMenu = false"
-              >
-                <UIcon name="i-heroicons-trophy" class="w-5 h-5" />
-                Leaderboard
-              </NuxtLink>
-              
-              <!-- Mobile User Balance -->
-              <div v-if="isAuthenticated && user?.balance" class="mobile-nav-link border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
-                <UIcon name="i-heroicons-currency-dollar" class="w-5 h-5 text-emerald-600" />
-                Balance: ${{ user.balance.toLocaleString() }}
-              </div>
-              
-              <!-- Mobile Login/Register (if not authenticated) -->
-              <div v-if="!isAuthenticated" class="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
-                <div class="flex flex-col space-y-2 px-2">
-                  <UButton 
-                    to="/login" 
-                    variant="ghost" 
-                    size="sm" 
-                    class="w-full justify-center"
-                    @click="showMobileMenu = false"
-                  >
-                    <UIcon name="i-heroicons-arrow-right-on-rectangle" class="w-4 h-4 mr-2" />
-                    Login
-                  </UButton>
-                  <UButton 
-                    to="/register" 
-                    size="sm" 
-                    class="w-full justify-center"
-                    @click="showMobileMenu = false"
-                  >
-                    <UIcon name="i-heroicons-user-plus" class="w-4 h-4 mr-2" />
-                    Register
-                  </UButton>
+                <NuxtLink 
+                  v-if="isAuthenticated"
+                  to="/transactions" 
+                  class="mobile-nav-link"
+                  @click="showMobileMenu = false"
+                >
+                  <UIcon name="i-heroicons-document-text" class="w-5 h-5" />
+                  Transactions
+                </NuxtLink>
+                <NuxtLink 
+                  to="/leaderboard" 
+                  class="mobile-nav-link"
+                  @click="showMobileMenu = false"
+                >
+                  <UIcon name="i-heroicons-trophy" class="w-5 h-5" />
+                  Leaderboard
+                </NuxtLink>
+                
+                <!-- Mobile User Balance -->
+                <div v-if="isAuthenticated && user?.balance" class="mobile-nav-link border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
+                  <UIcon name="i-heroicons-currency-dollar" class="w-5 h-5 text-emerald-600" />
+                  Balance: ${{ user.balance.toLocaleString() }}
+                </div>
+                
+                <!-- Mobile Login/Register (if not authenticated) -->
+                <div v-if="!isAuthenticated" class="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
+                  <div class="flex flex-col space-y-2 px-2">
+                    <UButton 
+                      to="/login" 
+                      variant="ghost" 
+                      size="sm" 
+                      class="w-full justify-center"
+                      @click="showMobileMenu = false"
+                    >
+                      <UIcon name="i-heroicons-arrow-right-on-rectangle" class="w-4 h-4 mr-2" />
+                      Login
+                    </UButton>
+                    <UButton 
+                      to="/register" 
+                      size="sm" 
+                      class="w-full justify-center"
+                      @click="showMobileMenu = false"
+                    >
+                      <UIcon name="i-heroicons-user-plus" class="w-4 h-4 mr-2" />
+                      Register
+                    </UButton>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          </ClientOnly>
         </UContainer>
       </header>
 
