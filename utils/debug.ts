@@ -30,7 +30,7 @@ const defaultConfig: DebugConfig = {
   level: 'info', // Only show info level and above in production
   modules: {
     api: false,          // Reduce API debug noise
-    auth: false,         // Reduce auth debug noise
+    auth: false,         // SECURITY: Keep auth debug disabled to prevent credential exposure
     websocket: false,    // Reduce WebSocket debug noise
     charts: false,       // Reduce charts debug noise
     portfolio: false,    // Reduce portfolio debug noise
@@ -71,34 +71,61 @@ class DebugLogger {
     return messageLevelIndex <= currentLevelIndex
   }
 
+  // Utility method to filter sensitive data
+  private filterSensitiveData(data: any): any {
+    if (!data || typeof data !== 'object') return data
+    
+    const sensitiveKeys = ['password', 'token', 'secret', 'key', 'authorization', 'auth']
+    
+    if (Array.isArray(data)) {
+      return data.map(item => this.filterSensitiveData(item))
+    }
+    
+    const filtered = { ...data }
+    for (const key in filtered) {
+      if (sensitiveKeys.some(sensitive => key.toLowerCase().includes(sensitive))) {
+        filtered[key] = '***FILTERED***'
+      } else if (typeof filtered[key] === 'object') {
+        filtered[key] = this.filterSensitiveData(filtered[key])
+      }
+    }
+    
+    return filtered
+  }
+
   // Main logging methods
   log(module: keyof DebugConfig['modules'], message: string, ...args: any[]) {
     if (this.shouldLog(module, 'info')) {
-      console.log(`[${module.toUpperCase()}] ${message}`, ...args)
+      const filteredArgs = args.map(arg => this.filterSensitiveData(arg))
+      console.log(`[${module.toUpperCase()}] ${message}`, ...filteredArgs)
     }
   }
 
   info(module: keyof DebugConfig['modules'], message: string, ...args: any[]) {
     if (this.shouldLog(module, 'info')) {
-      console.info(`[${module.toUpperCase()}] ${message}`, ...args)
+      const filteredArgs = args.map(arg => this.filterSensitiveData(arg))
+      console.info(`[${module.toUpperCase()}] ${message}`, ...filteredArgs)
     }
   }
 
   warn(module: keyof DebugConfig['modules'], message: string, ...args: any[]) {
     if (this.shouldLog(module, 'warn')) {
-      console.warn(`[${module.toUpperCase()}] ${message}`, ...args)
+      const filteredArgs = args.map(arg => this.filterSensitiveData(arg))
+      console.warn(`[${module.toUpperCase()}] ${message}`, ...filteredArgs)
     }
   }
 
   error(module: keyof DebugConfig['modules'], message: string, ...args: any[]) {
     if (this.shouldLog(module, 'error')) {
-      console.error(`[${module.toUpperCase()}] ${message}`, ...args)
+      const filteredArgs = args.map(arg => this.filterSensitiveData(arg))
+      console.error(`[${module.toUpperCase()}] ${message}`, ...filteredArgs)
     }
   }
 
   debug(module: keyof DebugConfig['modules'], message: string, ...args: any[]) {
     if (this.shouldLog(module, 'debug')) {
-      console.debug(`[${module.toUpperCase()}] ${message}`, ...args)
+      const filteredArgs = args.map(arg => this.filterSensitiveData(arg))
+      console.debug(`[${module.toUpperCase()}] ${message}`, ...filteredArgs)
     }
   }
 
@@ -115,6 +142,11 @@ class DebugLogger {
   }
 
   enableModule(module: keyof DebugConfig['modules']) {
+    // Security warning for auth module
+    if (module === 'auth') {
+      console.warn('⚠️ [SECURITY WARNING] Enabling auth debug may expose sensitive credentials in console logs. Use with caution!')
+    }
+    
     this.config.modules[module] = true
     if (typeof window !== 'undefined') {
       localStorage.setItem('debug-config', JSON.stringify(this.config))
@@ -178,6 +210,8 @@ export const debug = {
 // Helper to enable debug mode from browser console
 if (typeof window !== 'undefined') {
   (window as any).enableDebug = (modules?: string[]) => {
+    console.log('🔧 Enabling debug mode...')
+    
     if (modules) {
       modules.forEach(module => {
         if (module in debugLogger.getConfig().modules) {
@@ -185,12 +219,13 @@ if (typeof window !== 'undefined') {
         }
       })
     } else {
+      console.warn('⚠️ [SECURITY WARNING] Enabling all debug modules including auth may expose sensitive data!')
       debugLogger.setConfig({ enabled: true, level: 'all' })
       Object.keys(debugLogger.getConfig().modules).forEach(module => {
         debugLogger.enableModule(module as keyof DebugConfig['modules'])
       })
     }
-    console.log('Debug mode enabled. Available modules:', Object.keys(debugLogger.getConfig().modules))
+    console.log('✅ Debug mode enabled. Available modules:', Object.keys(debugLogger.getConfig().modules))
   }
 
   (window as any).disableDebug = () => {

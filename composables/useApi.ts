@@ -85,7 +85,19 @@ export const useApi = () => {
   // Generic API call function
   const apiCall = async <T>(endpoint: string, options: any = {}): Promise<ApiResponse<T>> => {
     const fullUrl = `${baseURL}${endpoint}`
-    debug.log('api', `Making request to: ${fullUrl}`, { headers: headers.value, options })
+    
+    // Filter sensitive data for logging
+    const logOptions = { ...options }
+    if (logOptions.body) {
+      const logBody = { ...logOptions.body }
+      // Remove password from logs
+      if (logBody.password) {
+        logBody.password = '***FILTERED***'
+      }
+      logOptions.body = logBody
+    }
+    
+    debug.log('api', `Making request to: ${fullUrl}`, { headers: headers.value, options: logOptions })
     
     try {
       const response = await $fetch<T>(fullUrl, {

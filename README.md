@@ -23,4 +23,36 @@ Modern dan interaktif frontend untuk aplikasi simulasi trading saham menggunakan
 - **Authentication**: JWT-based dengan HTTP-only cookies
 - **API**: RESTful API integration
 
+## Development Debug Mode
+
+### ⚠️ Security Notice
+Debug mode can expose sensitive information including passwords and tokens in browser console. Always use with caution:
+
+#### Safe Debug Usage:
+```javascript
+// Enable specific modules only
+enableDebug(['charts', 'portfolio', 'websocket'])
+
+// Check current config
+debugConfig()
+
+// Disable when done
+disableDebug()
+```
+
+#### ⛔ Avoid in Production:
+```javascript
+// DON'T: Enable all modules (includes auth)
+enableDebug()
+
+// DON'T: Enable auth module
+enableDebug(['auth'])
+```
+
+#### Security Features:
+- 🔒 Auth debug disabled by default
+- 🔒 Automatic password filtering in logs
+- 🔒 Security warnings when enabling sensitive modules
+- 🔒 Sensitive data replaced with `***FILTERED***`
+
 
