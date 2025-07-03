@@ -31,7 +31,7 @@ const defaultConfig: DebugConfig = {
   modules: {
     api: false,          // Reduce API debug noise
     auth: false,         // SECURITY: Keep auth debug disabled to prevent credential exposure
-    websocket: false,    // Reduce WebSocket debug noise
+    websocket: isDevelopment(), // Enable WebSocket debug in development to diagnose connection issues
     charts: false,       // Reduce charts debug noise
     portfolio: false,    // Reduce portfolio debug noise
     orders: false,       // Reduce orders debug noise

@@ -11,6 +11,20 @@ export default defineNuxtConfig({
     '@pinia/nuxt'
   ],
 
+  // ===== PLUGINS CONFIGURATION =====
+  plugins: [
+    // Error suppression plugins should load first and in specific order
+    { src: '~/plugins/extension-suppressor.client.ts', mode: 'client' },
+    { src: '~/plugins/error-handler.client.ts', mode: 'client' },
+    { src: '~/plugins/vue-warnings-suppressor.client.ts', mode: 'client' },
+    { src: '~/plugins/hydration-fix.client.ts', mode: 'client' },
+    // WebSocket diagnostics for debugging real-time issues
+    { src: '~/plugins/websocket-diagnostics.client.ts', mode: 'client' },
+    // Other plugins load after error suppression
+    { src: '~/plugins/auth.client.ts', mode: 'client' },
+    { src: '~/plugins/apexcharts.client.ts', mode: 'client' }
+  ],
+
   // ===== CSS CONFIGURATION =====
   css: ['~/assets/css/main.css'],
 
@@ -36,6 +50,19 @@ export default defineNuxtConfig({
     public: {
       apiBaseUrl: process.env.API_BASE_URL || 'https://go-backend-production-af7d.up.railway.app/api/v1'
     }
+  },
+
+  // ===== ROUTE RULES FOR HYDRATION =====
+  routeRules: {
+    // Disable SSR for pages with hydration issues during development
+    ...(process.env.NODE_ENV === 'development' && {
+      '/dashboard': { 
+        ssr: true,
+        prerender: false,
+        // Add hydration mode for better debugging
+        experimentalNoScripts: false
+      }
+    })
   },
 
   // ===== APP CONFIGURATION =====
@@ -76,6 +103,23 @@ export default defineNuxtConfig({
   // ===== HYDRATION CONFIGURATION =====
   experimental: {
     payloadExtraction: false,
+    // Reduce hydration mismatch issues
+    viewTransition: false,
+    // Better error handling
+    asyncContext: false
+  },
+
+  // ===== VUE CONFIGURATION =====
+  vue: {
+    // Better hydration handling
+    compilerOptions: {
+      // Preserve whitespace to prevent hydration mismatches
+      whitespace: 'preserve',
+      // Disable production tips
+      ...(process.env.NODE_ENV === 'development' && {
+        comments: false
+      })
+    }
   },
 
   // ===== NITRO CONFIGURATION =====
@@ -84,7 +128,15 @@ export default defineNuxtConfig({
       options: {
         target: 'esnext'
       }
-    }
+    },
+    // Better error handling in development
+    ...(process.env.NODE_ENV === 'development' && {
+      experimental: {
+        wasm: false
+      },
+      // Reduce noise in development
+      logLevel: 1
+    })
   },
 
   // ===== VITE CONFIGURATION =====
@@ -97,8 +149,19 @@ export default defineNuxtConfig({
       }
     },
     define: {
-      __DEV__: process.env.NODE_ENV === 'development'
-    }
+      __DEV__: process.env.NODE_ENV === 'development',
+      // Disable Vue dev warnings in production
+      __VUE_PROD_DEVTOOLS__: false,
+      __VUE_OPTIONS_API__: false
+    },
+    // Better sourcemaps for debugging hydration issues
+    ...(process.env.NODE_ENV === 'development' && {
+      build: {
+        sourcemap: true
+      },
+      // Reduce console noise
+      logLevel: 'warn'
+    })
   },
 
   // ===== CLIENT-SIDE NAVIGATION =====
@@ -106,5 +169,15 @@ export default defineNuxtConfig({
     options: {
       hashMode: false
     }
+  },
+
+  // ===== BUILD CONFIGURATION =====
+  build: {
+    // Reduce build noise
+    analyze: false,
+    ...(process.env.NODE_ENV === 'development' && {
+      // Better debugging in development
+      extractCSS: false
+    })
   }
 })

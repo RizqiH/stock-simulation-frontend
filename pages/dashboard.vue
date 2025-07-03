@@ -11,7 +11,7 @@
               </div>
               <div>
                 <h1 class="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white">
-                  Welcome back, {{ user?.username || 'Trader' }}!
+                  Welcome back, {{ displayName }}!
                 </h1>
                 <p class="text-gray-600 dark:text-gray-400">
                   Ready to make some smart trades today?
@@ -22,7 +22,7 @@
           
           <!-- Portfolio Value Card -->
           <ClientOnly>
-            <UCard class="p-6">
+            <UCard class="p-6" v-if="isDataLoaded">
               <div class="flex items-center gap-4">
                 <div class="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
                   <UIcon name="i-heroicons-currency-dollar" class="w-8 h-8 text-white" />
@@ -30,18 +30,18 @@
                 <div>
                   <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Portfolio Value</p>
                   <p class="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
-                    ${{ portfolioValue.toLocaleString() }}
+                    ${{ portfolioData?.total_value?.toLocaleString() || '0' }}
                   </p>
                   <UBadge
-                    :color="portfolioChange >= 0 ? 'emerald' : 'red'"
+                    :color="(portfolioData?.total_profit || 0) >= 0 ? 'emerald' : 'red'"
                     variant="soft"
                     size="sm"
                   >
                     <UIcon 
-                      :name="portfolioChange >= 0 ? 'i-heroicons-arrow-trending-up' : 'i-heroicons-arrow-trending-down'" 
+                      :name="(portfolioData?.total_profit || 0) >= 0 ? 'i-heroicons-arrow-trending-up' : 'i-heroicons-arrow-trending-down'" 
                       class="w-3 h-3 mr-1"
                     />
-                    {{ portfolioChange >= 0 ? '+' : '' }}{{ portfolioChangePct.toFixed(2) }}%
+                    {{ (portfolioData?.total_profit || 0) >= 0 ? '+' : '' }}{{ (portfolioData?.total_profit_pct || 0).toFixed(2) }}%
                   </UBadge>
                 </div>
               </div>
@@ -88,7 +88,7 @@
               </div>
               
               <ClientOnly>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8" v-if="isDataLoaded">
                   <!-- Total Value -->
                   <div class="text-center">
                     <div class="w-16 h-16 bg-gradient-to-br from-primary-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
@@ -96,10 +96,10 @@
                     </div>
                     <h4 class="text-sm text-gray-600 dark:text-gray-400 mb-2 font-medium">Total Value</h4>
                     <p class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                      ${{ portfolioValue.toLocaleString() }}
+                      ${{ portfolioData?.total_value?.toLocaleString() || '0' }}
                     </p>
-                    <UBadge :color="portfolioChange >= 0 ? 'emerald' : 'red'" variant="soft">
-                      {{ portfolioChange >= 0 ? '+' : '' }}${{ Math.abs(portfolioChange).toLocaleString() }}
+                    <UBadge :color="(portfolioData?.total_profit || 0) >= 0 ? 'emerald' : 'red'" variant="soft">
+                      {{ (portfolioData?.total_profit || 0) >= 0 ? '+' : '' }}${{ Math.abs(portfolioData?.total_profit || 0).toLocaleString() }}
                     </UBadge>
                   </div>
                   
@@ -110,10 +110,10 @@
                     </div>
                     <h4 class="text-sm text-gray-600 dark:text-gray-400 mb-2 font-medium">Available Cash</h4>
                     <p class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                      ${{ user?.balance?.toLocaleString() || '0' }}
+                      ${{ userProfile?.balance?.toLocaleString() || '0' }}
                     </p>
                     <p class="text-sm text-gray-600 dark:text-gray-400">
-                      {{ ((user?.balance || 0) / portfolioValue * 100).toFixed(1) }}% of portfolio
+                      {{ (((userProfile?.balance || 0) / (portfolioData?.total_value || 1)) * 100).toFixed(1) }}% of portfolio
                     </p>
                   </div>
                   
@@ -125,9 +125,9 @@
                     <h4 class="text-sm text-gray-600 dark:text-gray-400 mb-2 font-medium">Total Profit</h4>
                     <p :class="[
                       'text-3xl font-bold mb-2',
-                      (user?.total_profit || 0) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
+                      (userProfile?.total_profit || 0) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
                     ]">
-                      {{ (user?.total_profit || 0) >= 0 ? '+' : '' }}${{ Math.abs(user?.total_profit || 0).toLocaleString() }}
+                      {{ (userProfile?.total_profit || 0) >= 0 ? '+' : '' }}${{ Math.abs(userProfile?.total_profit || 0).toLocaleString() }}
                     </p>
                     <p class="text-sm text-gray-600 dark:text-gray-400">
                       All-time performance
@@ -159,65 +159,68 @@
               </template>
               
               <div class="p-6">
-                <!-- Loading State -->
-                <div v-if="isLoadingPortfolio" class="space-y-4">
-                  <div v-for="i in 3" :key="i" class="flex items-center justify-between p-3 rounded-lg">
-                    <div class="flex items-center gap-3">
-                      <div class="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse"></div>
-                      <div class="space-y-2">
-                        <div class="w-16 h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                        <div class="w-20 h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                <ClientOnly>
+                  <!-- Empty State -->
+                  <div v-if="isDataLoaded && (!portfolioData?.holdings || portfolioData.holdings.length === 0)" class="text-center py-12">
+                    <div class="w-16 h-16 bg-gradient-to-br from-primary-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+                      <UIcon name="i-heroicons-briefcase" class="w-8 h-8 text-white" />
+                    </div>
+                    <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">No holdings yet</h4>
+                    <p class="text-gray-600 dark:text-gray-400 mb-6">
+                      Start building your portfolio by purchasing stocks
+                    </p>
+                    <UButton to="/market">
+                      Start Trading
+                    </UButton>
+                  </div>
+                  
+                  <!-- Holdings List -->
+                  <div v-else-if="isDataLoaded && portfolioData?.holdings" class="space-y-3">
+                    <div
+                      v-for="holding in portfolioData.holdings.slice(0, 5)"
+                      :key="holding.stock_symbol"
+                      class="flex items-center justify-between p-4 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all duration-200"
+                    >
+                      <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-primary-500 to-purple-600 rounded-xl flex items-center justify-center">
+                          <span class="text-white font-bold">{{ holding.stock_symbol.charAt(0) }}</span>
+                        </div>
+                        <div>
+                          <h4 class="font-bold text-gray-900 dark:text-white">{{ holding.stock_symbol }}</h4>
+                          <p class="text-sm text-gray-600 dark:text-gray-400">{{ holding.quantity }} shares</p>
+                        </div>
+                      </div>
+                      <div class="text-right">
+                        <p class="font-bold text-gray-900 dark:text-white">${{ holding.current_value?.toLocaleString() || '0' }}</p>
+                        <UBadge
+                          :color="(holding.profit_loss || 0) >= 0 ? 'emerald' : 'red'"
+                          variant="soft"
+                          size="sm"
+                        >
+                          {{ (holding.profit_loss || 0) >= 0 ? '+' : '' }}{{ (holding.profit_loss_pct || 0).toFixed(2) }}%
+                        </UBadge>
                       </div>
                     </div>
-                    <div class="text-right space-y-2">
-                      <div class="w-20 h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                      <div class="w-16 h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                    </div>
                   </div>
-                </div>
-                
-                <!-- Empty State -->
-                <div v-else-if="userPortfolio.length === 0" class="text-center py-12">
-                  <div class="w-16 h-16 bg-gradient-to-br from-primary-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-                    <UIcon name="i-heroicons-briefcase" class="w-8 h-8 text-white" />
-                  </div>
-                  <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">No holdings yet</h4>
-                  <p class="text-gray-600 dark:text-gray-400 mb-6">
-                    Start building your portfolio by purchasing stocks
-                  </p>
-                  <UButton to="/market">
-                    Start Trading
-                  </UButton>
-                </div>
-                
-                <!-- Holdings List -->
-                <div v-else class="space-y-3">
-                  <div
-                    v-for="holding in userPortfolio.slice(0, 5)"
-                    :key="holding.stock_symbol"
-                    class="flex items-center justify-between p-4 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all duration-200"
-                  >
-                    <div class="flex items-center gap-4">
-                      <div class="w-12 h-12 bg-gradient-to-br from-primary-500 to-purple-600 rounded-xl flex items-center justify-center">
-                        <span class="text-white font-bold">{{ holding.stock_symbol.charAt(0) }}</span>
-                      </div>
-                      <div>
-                        <h4 class="font-bold text-gray-900 dark:text-white">{{ holding.stock_symbol }}</h4>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">{{ holding.quantity }} shares</p>
+                  
+                  <template #fallback>
+                    <div class="space-y-4">
+                      <div v-for="i in 3" :key="i" class="flex items-center justify-between p-3 rounded-lg">
+                        <div class="flex items-center gap-3">
+                          <div class="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse"></div>
+                          <div class="space-y-2">
+                            <div class="w-16 h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                            <div class="w-20 h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                          </div>
+                        </div>
+                        <div class="text-right space-y-2">
+                          <div class="w-20 h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                          <div class="w-16 h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                        </div>
                       </div>
                     </div>
-                    <div class="text-right">
-                      <p class="font-bold text-gray-900 dark:text-white">${{ holding.current_value.toLocaleString() }}</p>
-                      <UBadge
-                        :color="holding.profit_loss >= 0 ? 'emerald' : 'red'"
-                        variant="soft"
-                        size="sm"
-                      >
-                        {{ holding.profit_loss >= 0 ? '+' : '' }}{{ holding.profit_loss_pct.toFixed(2) }}%
-                      </UBadge>
-                    </div>
-                  </div>
-                </div>
+                  </template>
+                </ClientOnly>
               </div>
             </UCard>
           </div>
@@ -247,15 +250,15 @@
 
             <!-- User Ranking -->
             <ClientOnly>
-              <UCard v-if="user?.rank">
+              <UCard v-if="isDataLoaded && userProfile?.rank">
                 <template #header>
                   <h3 class="text-xl font-bold text-gray-900 dark:text-white">Your Ranking</h3>
                 </template>
                 <div class="p-8 text-center">
                   <div class="w-20 h-20 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <span class="text-2xl font-bold text-white">#{{ user.rank }}</span>
+                    <span class="text-2xl font-bold text-white">#{{ userProfile.rank }}</span>
                   </div>
-                  <h4 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Rank {{ user.rank }}</h4>
+                  <h4 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Rank {{ userProfile.rank }}</h4>
                   <p class="text-gray-600 dark:text-gray-400 mb-6">
                     Global ranking among all traders
                   </p>
@@ -324,53 +327,57 @@ useHead({
 
 // Composables
 const { user, refreshProfile } = useAuth()
-const { portfolio: portfolioApi, stocks: stocksApi } = useApi()
+const { portfolio: portfolioApi } = useApi()
 
-// Reactive data
-const isRefreshing = ref(false)
-const isLoadingPortfolio = ref(true)
-
-// Data
-const userPortfolio = ref([])
-const portfolioValue = ref(0)
-const portfolioChange = ref(0)
-const portfolioChangePct = ref(0)
-
-// Load portfolio data
-const loadPortfolioData = async () => {
-  try {
-    isLoadingPortfolio.value = true
-    
-    // Load portfolio summary
-    const summaryResult = await portfolioApi.getSummary()
-    if (summaryResult.data) {
-      userPortfolio.value = summaryResult.data.holdings || []
-      portfolioValue.value = summaryResult.data.total_value || (user.value?.balance || 0)
-      portfolioChange.value = summaryResult.data.total_profit || 0
-      portfolioChangePct.value = summaryResult.data.total_profit_pct || 0
-    }
-  } catch (error) {
-    console.error('Failed to load portfolio data:', error)
-    // Set defaults if portfolio fails
-    portfolioValue.value = user.value?.balance || 0
-  } finally {
-    isLoadingPortfolio.value = false
+// SSR-safe data fetching using useAsyncData
+const { data: portfolioData, pending: portfolioPending, refresh: refreshPortfolio } = await useAsyncData(
+  'dashboard-portfolio',
+  () => portfolioApi.getSummary(),
+  {
+    transform: (result) => result.data || null,
+    default: () => ({
+      total_value: 0,
+      total_profit: 0,
+      total_profit_pct: 0,
+      holdings: []
+    })
   }
-}
+)
 
-// Refresh all data
+const { data: userProfile, pending: userPending, refresh: refreshUser } = await useAsyncData(
+  'dashboard-user',
+  async () => {
+    await refreshProfile()
+    return user.value
+  },
+  {
+    default: () => ({
+      username: 'Trader',
+      balance: 0,
+      total_profit: 0,
+      rank: null
+    })
+  }
+)
+
+// Reactive state
+const isRefreshing = ref(false)
+
+// Computed values - SSR safe
+const displayName = computed(() => userProfile.value?.username || 'Trader')
+const isDataLoaded = computed(() => !portfolioPending.value && !userPending.value)
+
+// Methods
 const refreshData = async () => {
   isRefreshing.value = true
-  await Promise.all([
-    refreshProfile(),
-    loadPortfolioData()
-  ])
-  isRefreshing.value = false
+  try {
+    await Promise.all([
+      refreshPortfolio(),
+      refreshUser()
+    ])
+  } finally {
+    isRefreshing.value = false
+  }
 }
-
-// Initialize data on mount
-onMounted(async () => {
-  await refreshData()
-})
 </script>
 
