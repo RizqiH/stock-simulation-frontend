@@ -28,7 +28,7 @@ export class WebSocketTester {
   async testApiHealth(): Promise<ConnectionTest> {
     const timestamp = new Date().toISOString()
     try {
-      const apiUrl = this.runtimeConfig?.public?.apiBaseUrl || 'https://go-backend-production-af7d.up.railway.app/api/v1'
+      const apiUrl = this.runtimeConfig?.public?.apiBaseUrl || 'https://go-backend-production-b653.up.railway.app/api/v1'
       const healthUrl = apiUrl.replace('/api/v1', '/health')
       
       const startTime = Date.now()
@@ -61,7 +61,7 @@ export class WebSocketTester {
   async testSimulatorStatus(): Promise<ConnectionTest> {
     const timestamp = new Date().toISOString()
     try {
-      const apiUrl = this.runtimeConfig?.public?.apiBaseUrl || 'https://go-backend-production-af7d.up.railway.app/api/v1'
+      const apiUrl = this.runtimeConfig?.public?.apiBaseUrl || 'https://go-backend-production-b653.up.railway.app/api/v1'
       const simulatorUrl = `${apiUrl}/simulator/status`
       
       const startTime = Date.now()
@@ -101,7 +101,7 @@ export class WebSocketTester {
     
     return new Promise((resolve) => {
       try {
-        const apiUrl = this.runtimeConfig?.public?.apiBaseUrl || 'https://go-backend-production-af7d.up.railway.app/api/v1'
+        const apiUrl = this.runtimeConfig?.public?.apiBaseUrl || 'https://go-backend-production-b653.up.railway.app/api/v1'
         const wsUrl = apiUrl
           .replace('http://', 'ws://')
           .replace('https://', 'wss://')
@@ -175,7 +175,7 @@ export class WebSocketTester {
     
     return new Promise((resolve) => {
       try {
-        const apiUrl = this.runtimeConfig?.public?.apiBaseUrl || 'https://go-backend-production-af7d.up.railway.app/api/v1'
+        const apiUrl = this.runtimeConfig?.public?.apiBaseUrl || 'https://go-backend-production-b653.up.railway.app/api/v1'
         const wsUrl = apiUrl
           .replace('http://', 'ws://')
           .replace('https://', 'wss://')

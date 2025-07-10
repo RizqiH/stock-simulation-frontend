@@ -48,7 +48,7 @@ export default defineNuxtConfig({
   // ===== RUNTIME CONFIGURATION =====
   runtimeConfig: {
     public: {
-      apiBaseUrl: process.env.API_BASE_URL || 'https://go-backend-production-af7d.up.railway.app/api/v1'
+      apiBaseUrl: process.env.API_BASE_URL || 'https://go-backend-production-b653.up.railway.app/api/v1'
     }
   },
 
